@@ -1,0 +1,75 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<div class="container">
+    <div class="row mb-3">
+        <div class="col-lg-12">
+            <input type="text" class="form-control" id="message" placeholder="Escribe tu mensaje aquí...">
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-lg-12 text-end">
+            <button class="btn btn-success" id="sendmessage">Enviar</button>
+        </div>
+    </div>
+    <h3 class="text-center"><strong>Chat Room</strong></h3>
+    <div class="row">
+        <div class="col-lg-12">
+            <ul id="discussion" class="list-unstyled border rounded p-3">
+                <!-- Mensajes aparecerán aquí -->
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<input type="hidden" id="displayname">
+
+
+@section scripts
+{
+    <script src="~/Scripts/jquery.signalR-2.4.3.js"></script>
+    <script src="~/signalr/hubs"></script>
+
+    <script type="text/javascript">
+        $(function () {
+            var chat = $.connection.chatHub;
+
+            // Método para recibir mensajes
+            chat.client.sendChat = function (name, message) {
+                var divName = $("<div/>").text(name).html();
+                var divMessage = $("<div/>").text(message).html();
+
+                $("#discussion").append("<li><strong>" + divName + "</strong>: " + divMessage + "</li>");
+            };
+
+            // Solicitar nombre al usuario
+            var nameOwner = prompt("Enter your name:", "").trim();
+            if (!nameOwner) {
+                alert("El nombre es obligatorio para participar en el chat.");
+                return;
+            }
+
+            $("#message").focus();
+
+            // Conexión con el servidor
+            $.connection.hub.start().done(function () {
+                $("#sendmessage").click(function () {
+                    var messageText = $("#message").val();
+                    if (!messageText.trim()) {
+                        alert("Escribe un mensaje antes de enviarlo.");
+                        return;
+                    }
+
+                    chat.server.send(nameOwner, messageText);
+                    $("#message").val("").focus();
+                });
+            });
+        });
+    </script>
+}
+
